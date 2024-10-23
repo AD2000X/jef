@@ -3,7 +3,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 import pandas as pd
-import numpy as np
 from typing import List, Dict
 from supabase import create_client
 import os
@@ -11,10 +10,10 @@ import os
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Supabase 初始化
+# Supabase initialization
 supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_KEY")
+    "https://uxwzcwedgyrkclyusvxh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4d3pjd2VkZ3lya2NseXVzdnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2"
 )
 
 class AnalysisRequest(BaseModel):
@@ -29,7 +28,7 @@ async def root():
 @app.post("/api/analyze")
 async def analyze(request: AnalysisRequest):
     try:
-        # 从 Supabase 获取数据
+        # Get data from Supabase
         response = supabase.table('jef_data').select('*').execute()
         df = pd.DataFrame(response.data)
         
@@ -38,8 +37,8 @@ async def analyze(request: AnalysisRequest):
             (df['est_IQ'].between(request.iq_range[0], request.iq_range[1]))
         ]
 
-        means = filtered_df.iloc[:, :9].mean()
-        stds = filtered_df.iloc[:, :9].std()
+        means = filtered_df.iloc[:, 2:11].mean()  # Exclude id and update columns range
+        stds = filtered_df.iloc[:, 2:11].std()
         z_scores = (pd.Series(request.scores) - means) / stds
 
         return JSONResponse(content={
