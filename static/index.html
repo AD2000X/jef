@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEF Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .input-group {
+            margin: 10px 0;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">JEF Analysis</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Input Panel -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Parameters</h2>
+                
+                <!-- Age and IQ Sliders -->
+                <div class="slider-container">
+                    <label>Age Range:</label>
+                    <input type="range" id="ageMin" min="20" max="80" value="30" class="w-full">
+                    <input type="range" id="ageMax" min="20" max="80" value="45" class="w-full">
+                    
+                    <label>IQ Range:</label>
+                    <input type="range" id="iqMin" min="70" max="130" value="85" class="w-full">
+                    <input type="range" id="iqMax" min="70" max="130" value="115" class="w-full">
+                </div>
+
+                <!-- Score Inputs -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label>PL:</label>
+                        <input type="number" id="pl" value="50" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="input-group">
+                        <label>PR:</label>
+                        <input type="number" id="pr" value="100" class="w-full p-2 border rounded">
+                    </div>
+                    <!-- Add other inputs similarly -->
+                </div>
+
+                <button id="calculateBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    Calculate
+                </button>
+            </div>
+
+            <!-- Graph Panel -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="plot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('calculateBtn').addEventListener('click', async () => {
+            const data = {
+                age_range: [
+                    parseInt(document.getElementById('ageMin').value),
+                    parseInt(document.getElementById('ageMax').value)
+                ],
+                iq_range: [
+                    parseInt(document.getElementById('iqMin').value),
+                    parseInt(document.getElementById('iqMax').value)
+                ],
+                scores: {
+                    pl: parseInt(document.getElementById('pl').value),
+                    pr: parseInt(document.getElementById('pr').value),
+                    // Add other scores
+                }
+            };
+
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            // Update plot using Plotly
+            // Add plotting logic here
+        });
+    </script>
+</body>
+</html>
