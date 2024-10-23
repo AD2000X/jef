@@ -10,7 +10,6 @@ import os
 
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,18 +18,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# 修改靜態文件掛載
+app.mount("/static", StaticFiles(directory="../static"), name="static")
 
-# Supabase initialization with error handling
-try:
-    supabase = create_client(
-        "https://uxwzcwedgyrkclyusvxh.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4d3pjd2VkZ3lya2NseXVzdnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2NjA2MjgsImV4cCI6MjA0NTIzNjYyOH0.Rk2d3Jq4KMApZtXbCkt1RBMniFBEL1wgbfOqvojwFLU"
-    )
-except Exception as e:
-    print(f"Supabase initialization error: {e}")
-    supabase = None
+# Supabase initialization
+supabase = create_client(
+    "https://uxwzcwedgyrkclyusvxh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4d3pjd2VkZ3lya2NseXVzdnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2NjA2MjgsImV4cCI6MjA0NTIzNjYyOH0.Rk2d3Jq4KMApZtXbCkt1RBMniFBEL1wgbfOqvojwFLU"
+)
 
 class AnalysisRequest(BaseModel):
     age_range: List[int]
@@ -39,32 +34,16 @@ class AnalysisRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    try:
-        return FileResponse("static/index.html")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return FileResponse("../static/index.html")
 
-@app.get("/api/health")
+@app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "ok"}
 
 @app.post("/api/analyze")
 async def analyze(request: AnalysisRequest):
-    if not supabase:
-        raise HTTPException(status_code=500, detail="Database connection not initialized")
-    
     try:
         response = supabase.table('jef_data').select('*').execute()
-        
-        if not response.data:
-            return JSONResponse(content={
-                'error': 'No data retrieved from database',
-                'z_scores': {},
-                'n_samples': 0,
-                'age_range': [0, 0],
-                'iq_range': [0, 0]
-            })
-            
         df = pd.DataFrame(response.data)
         
         filtered_df = df[
@@ -72,27 +51,14 @@ async def analyze(request: AnalysisRequest):
             (df['est_IQ'].between(request.iq_range[0], request.iq_range[1]))
         ]
 
-        if len(filtered_df) == 0:
-            return JSONResponse(content={
-                'error': 'No data matches the specified criteria',
-                'z_scores': {},
-                'n_samples': 0,
-                'age_range': request.age_range,
-                'iq_range': request.iq_range
-            })
-
         constructs = ["PL", "PR", "ST", "CT", "AT", "EBPM", "ABPM", "TBPM", "AVG"]
-        
         means = filtered_df[constructs].mean()
         stds = filtered_df[constructs].std()
 
         z_scores = {}
         for construct in constructs:
             if construct in request.scores:
-                if stds[construct] == 0:
-                    z_scores[construct] = 0
-                else:
-                    z_scores[construct] = float((request.scores[construct] - means[construct]) / stds[construct])
+                z_scores[construct] = float((request.scores[construct] - means[construct]) / stds[construct])
 
         return JSONResponse(content={
             'z_scores': z_scores,
@@ -102,4 +68,4 @@ async def analyze(request: AnalysisRequest):
         })
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
