@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -29,29 +28,34 @@ async def root():
 @app.post("/api/analyze")
 async def analyze(request: AnalysisRequest):
     try:
+        # Get data from Supabase
         response = supabase.table('jef_data').select('*').execute()
         df = pd.DataFrame(response.data)
         
+        # Filter data based on age and IQ
         filtered_df = df[
             (df['age'].between(request.age_range[0], request.age_range[1])) &
             (df['est_IQ'].between(request.iq_range[0], request.iq_range[1]))
         ]
 
-        # 計算每個指標的Z分數
-        score_columns = ['PL', 'PR', 'ST', 'CT', 'AT', 'EBPM', 'ABPM', 'TBPM', 'AVG']
-        means = filtered_df[score_columns].mean()
-        stds = filtered_df[score_columns].std()
+        # Define construct order
+        constructs = ["PL", "PR", "ST", "CT", "AT", "EBPM", "ABPM", "TBPM", "AVG"]
         
+        # Calculate means and standard deviations
+        means = filtered_df[constructs].mean()
+        stds = filtered_df[constructs].std()
+
+        # Calculate z-scores for each construct
         z_scores = {}
-        for col in score_columns:
-            if col in request.scores:
-                z_scores[col] = (request.scores[col] - means[col]) / stds[col]
+        for construct in constructs:
+            if construct in request.scores:
+                z_scores[construct] = float((request.scores[construct] - means[construct]) / stds[construct])
 
         return JSONResponse(content={
             'z_scores': z_scores,
             'n_samples': len(filtered_df),
-            'age_range': request.age_range,
-            'iq_range': request.iq_range
+            'age_range': [min(filtered_df['age']), max(filtered_df['age'])],
+            'iq_range': [min(filtered_df['est_IQ']), max(filtered_df['est_IQ'])]
         })
 
     except Exception as e:
