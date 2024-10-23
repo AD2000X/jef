@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEF Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">JEF Analysis</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Input Panel -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Parameters</h2>
+                
+                <!-- Age and IQ ranges -->
+                <div class="mb-4">
+                    <label>Age Range:</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="ageMin" min="0" max="100" value="30" class="border p-2 w-24">
+                        <input type="number" id="ageMax" min="0" max="100" value="45" class="border p-2 w-24">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label>IQ Range:</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="iqMin" min="0" max="200" value="85" class="border p-2 w-24">
+                        <input type="number" id="iqMax" min="0" max="200" value="115" class="border p-2 w-24">
+                    </div>
+                </div>
+
+                <!-- Scores -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label>PL</label>
+                        <input type="number" id="pl" value="50" class="border p-2 w-full">
+                    </div>
+                    <!-- Add other score inputs similarly -->
+                </div>
+
+                <button id="analyzeBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+                    Analyze
+                </button>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div id="plotDiv"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            const data = {
+                age_range: [
+                    parseInt(document.getElementById('ageMin').value),
+                    parseInt(document.getElementById('ageMax').value)
+                ],
+                iq_range: [
+                    parseInt(document.getElementById('iqMin').value),
+                    parseInt(document.getElementById('iqMax').value)
+                ],
+                scores: {
+                    pl: parseInt(document.getElementById('pl').value),
+                    // Add other scores
+                }
+            };
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                // Plot results using Plotly
+                const plotData = [{
+                    type: 'bar',
+                    x: Object.keys(result.z_scores),
+                    y: Object.values(result.z_scores),
+                    marker: {
+                        color: '#CC3333'
+                    }
+                }];
+
+                const layout = {
+                    title: 'Z-Scores Analysis',
+                    yaxis: {
+                        title: 'Z-score',
+                        range: [-5, 1]
+                    },
+                    shapes: [{
+                        type: 'line',
+                        x0: -0.5,
+                        x1: Object.keys(result.z_scores).length - 0.5,
+                        y0: -2,
+                        y1: -2,
+                        line: {
+                            color: '#0099FF',
+                            width: 2,
+                            dash: 'dash'
+                        }
+                    }]
+                };
+
+                Plotly.newPlot('plotDiv', plotData, layout);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
