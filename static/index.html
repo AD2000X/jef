@@ -1,340 +1,225 @@
+# static/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JEF Analysis</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Analysis Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .container-fluid {
-            padding: 20px;
-            max-width: 1400px;
-        }
-        
-        .sidebar {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-        }
-
-        .range-slider {
-            position: relative;
-            padding: 30px 0;
-            margin: 20px 0;
-        }
-
-        .range-slider .track {
-            position: absolute;
-            width: 100%;
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .range-slider .ticks {
-            display: flex;
-            justify-content: space-between;
-            padding: 0 10px;
-            position: absolute;
-            width: 100%;
-            top: -20px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .range-slider .slider {
-            -webkit-appearance: none;
-            position: absolute;
-            width: 100%;
-            height: 8px;
-            background: transparent;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-
-        .range-slider .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            pointer-events: auto;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #007bff;
-            cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 0 0 1px #007bff;
-        }
-
-        .range-label {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .range-selected {
-            color: #007bff;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            font-weight: 500;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        #plotDiv {
-            min-height: 500px;
-            background: white;
-            border-radius: 5px;
-            padding: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="static/styles.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar Panel -->
-            <div class="col-md-4 sidebar">
+            <!-- Left Panel -->
+            <div class="col-md-4 sidebar p-4">
                 <h3 class="mb-4">Parameters</h3>
                 
                 <!-- Age Range Slider -->
-                <div class="range-slider">
-                    <div class="range-label">Age</div>
-                    <div class="track"></div>
-                    <div class="ticks" id="ageTicks"></div>
-                    <input type="range" class="slider" id="ageMin" min="18" max="100" step="7" value="30">
-                    <input type="range" class="slider" id="ageMax" min="18" max="100" step="7" value="45">
-                    <div class="range-selected" id="ageRange"></div>
+                <div class="mb-4">
+                    <label class="form-label">Age Range</label>
+                    <div id="ageSlider" class="range-slider"></div>
+                    <div id="ageValue" class="mt-2"></div>
                 </div>
 
                 <!-- IQ Range Slider -->
-                <div class="range-slider">
-                    <div class="range-label">IQ</div>
-                    <div class="track"></div>
-                    <div class="ticks" id="iqTicks"></div>
-                    <input type="range" class="slider" id="iqMin" min="70" max="180" step="6" value="85">
-                    <input type="range" class="slider" id="iqMax" min="70" max="180" step="6" value="115">
-                    <div class="range-selected" id="iqRange"></div>
+                <div class="mb-4">
+                    <label class="form-label">IQ Range</label>
+                    <div id="iqSlider" class="range-slider"></div>
+                    <div id="iqValue" class="mt-2"></div>
                 </div>
 
                 <!-- Score Inputs -->
                 <div class="row">
                     <div class="col-6">
-                        <div class="input-group">
-                            <label>PL</label>
-                            <input type="number" id="pl" value="50">
+                        <div class="mb-3">
+                            <label class="form-label">PL</label>
+                            <input type="number" class="form-control" id="PL">
                         </div>
-                        <div class="input-group">
-                            <label>ST</label>
-                            <input type="number" id="st" value="50">
+                        <div class="mb-3">
+                            <label class="form-label">ST</label>
+                            <input type="number" class="form-control" id="ST">
                         </div>
-                        <div class="input-group">
-                            <label>AT</label>
-                            <input type="number" id="at" value="0">
+                        <div class="mb-3">
+                            <label class="form-label">AT</label>
+                            <input type="number" class="form-control" id="AT">
                         </div>
-                        <div class="input-group">
-                            <label>ABPM</label>
-                            <input type="number" id="abpm" value="75">
+                        <div class="mb-3">
+                            <label class="form-label">ABPM</label>
+                            <input type="number" class="form-control" id="ABPM">
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="input-group">
-                            <label>PR</label>
-                            <input type="number" id="pr" value="100">
+                        <div class="mb-3">
+                            <label class="form-label">PR</label>
+                            <input type="number" class="form-control" id="PR">
                         </div>
-                        <div class="input-group">
-                            <label>CT</label>
-                            <input type="number" id="ct" value="25">
+                        <div class="mb-3">
+                            <label class="form-label">CT</label>
+                            <input type="number" class="form-control" id="CT">
                         </div>
-                        <div class="input-group">
-                            <label>EBPM</label>
-                            <input type="number" id="ebpm" value="25">
+                        <div class="mb-3">
+                            <label class="form-label">EBPM</label>
+                            <input type="number" class="form-control" id="EBPM">
                         </div>
-                        <div class="input-group">
-                            <label>TBPM</label>
-                            <input type="number" id="tbpm" value="50">
+                        <div class="mb-3">
+                            <label class="form-label">TBPM</label>
+                            <input type="number" class="form-control" id="TBPM">
                         </div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>AVG</label>
-                    <input type="number" id="avg" value="46.9">
+
+                <div class="mb-3">
+                    <label class="form-label">AVG</label>
+                    <input type="number" class="form-control" id="AVG">
                 </div>
-                <button id="calculateBtn" class="btn btn-primary w-100 mt-3">Calculate</button>
+
+                <button id="calculateBtn" class="btn btn-primary w-100">Calculate</button>
             </div>
 
-            <!-- Main Panel -->
+            <!-- Right Panel -->
             <div class="col-md-8">
-                <div id="plotDiv"></div>
+                <div id="plotDiv" class="plot-container"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Generate tick marks for sliders
-        function generateTicks(min, max, step, containerId) {
-            const container = document.getElementById(containerId);
-            const totalSteps = Math.floor((max - min) / step);
-            container.innerHTML = '';
-            
-            for (let i = 0; i <= totalSteps; i++) {
-                const tick = document.createElement('span');
-                tick.textContent = min + (i * step);
-                container.appendChild(tick);
-            }
-        }
-
-        // Update range displays
-        function updateRangeDisplay() {
-            const ageMin = document.getElementById('ageMin').value;
-            const ageMax = document.getElementById('ageMax').value;
-            const iqMin = document.getElementById('iqMin').value;
-            const iqMax = document.getElementById('iqMax').value;
-
-            // Ensure min doesn't exceed max
-            if (parseInt(ageMin) > parseInt(ageMax)) {
-                document.getElementById('ageMax').value = ageMin;
-            }
-            if (parseInt(iqMin) > parseInt(iqMax)) {
-                document.getElementById('iqMax').value = iqMin;
-            }
-
-            document.getElementById('ageRange').textContent = `${ageMin} - ${ageMax}`;
-            document.getElementById('iqRange').textContent = `${iqMin} - ${iqMax}`;
-        }
-
-        // Initialize sliders
-        generateTicks(18, 100, 7, 'ageTicks');
-        generateTicks(70, 180, 6, 'iqTicks');
-
-        // Add event listeners
-        ['ageMin', 'ageMax', 'iqMin', 'iqMax'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateRangeDisplay);
-        });
-
-        document.getElementById('calculateBtn').addEventListener('click', async () => {
-            const data = {
-                age_range: [
-                    parseInt(document.getElementById('ageMin').value),
-                    parseInt(document.getElementById('ageMax').value)
-                ],
-                iq_range: [
-                    parseInt(document.getElementById('iqMin').value),
-                    parseInt(document.getElementById('iqMax').value)
-                ],
-                scores: {
-                    PL: parseFloat(document.getElementById('pl').value),
-                    PR: parseFloat(document.getElementById('pr').value),
-                    ST: parseFloat(document.getElementById('st').value),
-                    CT: parseFloat(document.getElementById('ct').value),
-                    AT: parseFloat(document.getElementById('at').value),
-                    EBPM: parseFloat(document.getElementById('ebpm').value),
-                    ABPM: parseFloat(document.getElementById('abpm').value),
-                    TBPM: parseFloat(document.getElementById('tbpm').value),
-                    AVG: parseFloat(document.getElementById('avg').value)
-                }
-            };
-
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                const plotData = [{
-                    type: 'bar',
-                    x: Object.keys(result.z_scores),
-                    y: Object.values(result.z_scores),
-                    marker: {
-                        color: '#CC3333',
-                        line: { color: 'black', width: 1 }
-                    },
-                    width: 0.6
-                }];
-
-                const layout = {
-                    title: '',
-                    yaxis: {
-                        title: 'Z-score',
-                        range: [-5, 1],
-                        zeroline: true,
-                        zerolinecolor: 'black',
-                        zerolinewidth: 0.5
-                    },
-                    xaxis: {
-                        position: 'top'
-                    },
-                    shapes: [{
-                        type: 'line',
-                        x0: -0.5,
-                        x1: Object.keys(result.z_scores).length - 0.5,
-                        y0: -2,
-                        y1: -2,
-                        line: {
-                            color: '#0099FF',
-                            width: 2,
-                            dash: 'dash'
-                        }
-                    }],
-                    annotations: [
-                        {
-                            x: 1,
-                            y: -4.8,
-                            text: `N = ${result.n_samples}`,
-                            showarrow: false,
-                            xanchor: 'right'
-                        },
-                        {
-                            x: 1,
-                            y: -4.5,
-                            text: `Age range: ${result.age_range[0]} ~ ${result.age_range[1]}`,
-                            showarrow: false,
-                            xanchor: 'right'
-                        },
-                        {
-                            x: 1,
-                            y: -4.2,
-                            text: `IQ range: ${result.iq_range[0]} ~ ${result.iq_range[1]}`,
-                            showarrow: false,
-                            xanchor: 'right'
-                        }
-                    ],
-                    showlegend: false,
-                    paper_bgcolor: 'rgba(0,0,0,0)',
-                    plot_bgcolor: 'rgba(0,0,0,0)',
-                    margin: {
-                        l: 50,
-                        r: 50,
-                        t: 50,
-                        b: 100
-                    }
-                };
-
-                Plotly.newPlot('plotDiv', plotData, layout);
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        });
-
-        // Initialize displays
-        updateRangeDisplay();
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.js"></script>
+    <script src="static/script.js"></script>
 </body>
 </html>
+
+# static/styles.css
+.sidebar {
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.plot-container {
+    height: 100vh;
+    padding: 20px;
+}
+
+.range-slider {
+    margin: 20px 0;
+}
+
+# static/script.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize range sliders
+    const ageSlider = document.getElementById('ageSlider');
+    noUiSlider.create(ageSlider, {
+        start: [18, 87],
+        connect: true,
+        range: {
+            'min': 18,
+            'max': 87
+        }
+    });
+
+    const iqSlider = document.getElementById('iqSlider');
+    noUiSlider.create(iqSlider, {
+        start: [73, 126],
+        connect: true,
+        range: {
+            'min': 73,
+            'max': 126
+        }
+    });
+
+    // Update display values
+    ageSlider.noUiSlider.on('update', function(values) {
+        document.getElementById('ageValue').textContent = 
+            `Selected range: ${Math.round(values[0])} - ${Math.round(values[1])}`;
+    });
+
+    iqSlider.noUiSlider.on('update', function(values) {
+        document.getElementById('iqValue').textContent = 
+            `Selected range: ${Math.round(values[0])} - ${Math.round(values[1])}`;
+    });
+
+    // Calculate button click handler
+    document.getElementById('calculateBtn').addEventListener('click', async function() {
+        const constructs = ['PL', 'PR', 'ST', 'CT', 'AT', 'EBPM', 'ABPM', 'TBPM', 'AVG'];
+        const scores = {};
+        
+        constructs.forEach(construct => {
+            const value = document.getElementById(construct).value;
+            if (value !== '') {
+                scores[construct] = parseFloat(value);
+            }
+        });
+
+        const ageRange = ageSlider.noUiSlider.get().map(Number);
+        const iqRange = iqSlider.noUiSlider.get().map(Number);
+
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    age_range: ageRange,
+                    iq_range: iqRange,
+                    scores: scores
+                })
+            });
+
+            const data = await response.json();
+            updatePlot(data);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+    function updatePlot(data) {
+        const constructs = ['PL', 'PR', 'ST', 'CT', 'AT', 'EBPM', 'ABPM', 'TBPM', 'AVG'];
+        const zScores = constructs.map(c => data.z_scores[c] || 0);
+
+        const trace = {
+            x: constructs,
+            y: zScores,
+            type: 'bar',
+            marker: {
+                color: 'rgb(220, 53, 69)'
+            }
+        };
+
+        const layout = {
+            title: 'Z-Scores by Construct',
+            shapes: [{
+                type: 'line',
+                x0: -0.5,
+                y0: -2,
+                x1: constructs.length - 0.5,
+                y1: -2,
+                line: {
+                    color: 'rgb(0, 123, 255)',
+                    width: 2,
+                    dash: 'dash'
+                }
+            }],
+            yaxis: {
+                title: 'Z-Score',
+                range: [-5, 1]
+            },
+            annotations: [
+                {
+                    x: 0.95,
+                    y: -4.5,
+                    xref: 'paper',
+                    yref: 'paper',
+                    text: `N = ${data.n_samples}<br>Age range: ${data.age_range[0]} - ${data.age_range[1]}<br>IQ range: ${data.iq_range[0]} - ${data.iq_range[1]}`,
+                    showarrow: false,
+                    align: 'right'
+                }
+            ]
+        };
+
+        Plotly.newPlot('plotDiv', [trace], layout);
+    }
+});
