@@ -1,3 +1,4 @@
+# main.py
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -28,7 +29,6 @@ async def root():
 @app.post("/api/analyze")
 async def analyze(request: AnalysisRequest):
     try:
-        # Get data from Supabase
         response = supabase.table('jef_data').select('*').execute()
         df = pd.DataFrame(response.data)
         
@@ -37,12 +37,18 @@ async def analyze(request: AnalysisRequest):
             (df['est_IQ'].between(request.iq_range[0], request.iq_range[1]))
         ]
 
-        means = filtered_df.iloc[:, 2:11].mean()  # Exclude id and update columns range
-        stds = filtered_df.iloc[:, 2:11].std()
-        z_scores = (pd.Series(request.scores) - means) / stds
+        # 計算每個指標的Z分數
+        score_columns = ['PL', 'PR', 'ST', 'CT', 'AT', 'EBPM', 'ABPM', 'TBPM', 'AVG']
+        means = filtered_df[score_columns].mean()
+        stds = filtered_df[score_columns].std()
+        
+        z_scores = {}
+        for col in score_columns:
+            if col in request.scores:
+                z_scores[col] = (request.scores[col] - means[col]) / stds[col]
 
         return JSONResponse(content={
-            'z_scores': z_scores.to_dict(),
+            'z_scores': z_scores,
             'n_samples': len(filtered_df),
             'age_range': request.age_range,
             'iq_range': request.iq_range
