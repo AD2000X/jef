@@ -19,5 +19,10 @@
       "src": "/(.*)",
       "dest": "api/main.py"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": ".",
+    "SUPABASE_URL": "https://uxwzcwedgyrkclyusvxh.supabase.co",
+    "SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4d3pjd2VkZ3lya2NseXVzdnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2NjA2MjgsImV4cCI6MjA0NTIzNjYyOH0.Rk2d3Jq4KMApZtXbCkt1RBMniFBEL1wgbfOqvojwFLU"
+  }
 }
