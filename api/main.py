@@ -1,33 +1,38 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 from typing import List, Dict
-import plotly.graph_objects as go
-from fastapi.responses import JSONResponse
+from supabase import create_client
+import os
 
 app = FastAPI()
-
-# Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Load data
-@app.on_event("startup")
-async def startup_event():
-    global df
-    df = pd.read_excel("data/JEF.data.xlsx")
-    df['age'] = pd.to_numeric(df['age'])
-    df['est_IQ'] = pd.to_numeric(df['est_IQ'])
+# Supabase 初始化
+supabase = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_KEY")
+)
 
 class AnalysisRequest(BaseModel):
     age_range: List[int]
     iq_range: List[int]
     scores: Dict[str, float]
 
+@app.get("/")
+async def root():
+    return FileResponse("static/index.html")
+
 @app.post("/api/analyze")
 async def analyze(request: AnalysisRequest):
     try:
+        # 从 Supabase 获取数据
+        response = supabase.table('jef_data').select('*').execute()
+        df = pd.DataFrame(response.data)
+        
         filtered_df = df[
             (df['age'].between(request.age_range[0], request.age_range[1])) &
             (df['est_IQ'].between(request.iq_range[0], request.iq_range[1]))
@@ -35,24 +40,14 @@ async def analyze(request: AnalysisRequest):
 
         means = filtered_df.iloc[:, :9].mean()
         stds = filtered_df.iloc[:, :9].std()
-
-        # Calculate z-scores
         z_scores = (pd.Series(request.scores) - means) / stds
 
-        # Create plot data
-        plot_data = {
+        return JSONResponse(content={
             'z_scores': z_scores.to_dict(),
             'n_samples': len(filtered_df),
             'age_range': request.age_range,
             'iq_range': request.iq_range
-        }
-
-        return JSONResponse(content=plot_data)
+        })
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# Add root route to serve the frontend
-@app.get("/")
-async def root():
-    return FileResponse("static/index.html")
